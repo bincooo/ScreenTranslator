@@ -446,11 +446,21 @@ export default function SourceArea(props: SourceAreaProps) {
     ) {
       initialTextLoadedRef.current = true
       const requestVersion = workflowTextVersionRef.current
+      if (requestVersion !== 0) {
+        // A `new_text` event already delivered this window's text.
+        return
+      }
       invokeCommand('get_text').then((v) => {
         if (workflowTextVersionRef.current !== requestVersion) {
           return
         }
-        void handleNewText(v).catch((error) => {
+        // `get_text` returns the raw workflow text, not a workflow payload.
+        // An empty result must not clear text delivered by a `new_text` event.
+        const text = typeof v === 'string' ? v : ''
+        if (text.trim() === '') {
+          return
+        }
+        void handleNewText({ kind: 'text', text }).catch((error) => {
           reportSourceAreaError(error, 'translate.initial_text')
         })
       })

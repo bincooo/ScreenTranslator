@@ -8,7 +8,7 @@ import prettierConfig from 'eslint-config-prettier'
 export default tseslint.config(
   // Ignored paths
   {
-    ignores: ['node_modules', 'dist', 'out', '.vite', 'spec', 'docs', '**/*.cjs'],
+    ignores: ['node_modules', 'dist', 'out', '.vite', 'spec', 'docs', 'test-results', '**/*.cjs'],
   },
 
   // Base JS rules
