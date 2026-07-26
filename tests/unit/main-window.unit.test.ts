@@ -307,6 +307,26 @@ describe('Main window lifecycle behavior', () => {
     expect(window.alwaysOnTop).toBe(false)
   })
 
+  it('shows an auto-start window for 500 ms before hiding it', async () => {
+    vi.useFakeTimers()
+    const windows = await loadWindowModule()
+    await windows.openWindow('config', { autoHideAfterReadyMs: 500 })
+    const window = lastWindow()
+
+    window.trigger('ready-to-show')
+
+    expect(window.options.show).toBe(false)
+    expect(window.show).toHaveBeenCalledOnce()
+    expect(window.focus).toHaveBeenCalledOnce()
+    expect(window.hide).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(499)
+    expect(window.hide).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(1)
+    expect(window.hide).toHaveBeenCalledOnce()
+  })
+
   it('hides the config window on close until application shutdown is marked', async () => {
     const windows = await loadWindowModule()
     await windows.openWindow('config')

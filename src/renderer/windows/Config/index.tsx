@@ -1,6 +1,5 @@
 import { useLocation, useRoutes } from 'react-router-dom'
 import { Suspense, useEffect } from 'react'
-import { getCurrentWindow } from '@/renderer/lib/electron/window'
 import { Card, Divider } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 
@@ -16,7 +15,6 @@ import {
 } from '@/renderer/components/windowChrome'
 import routes from './routes'
 import './style.css'
-const appWindow = getCurrentWindow()
 
 export default function Config() {
   const { t } = useTranslation()
@@ -25,7 +23,6 @@ export default function Config() {
   const pageTitleKey = location.pathname === '/' ? 'general' : location.pathname.slice(1)
 
   useEffect(() => {
-    void appWindow.show()
     void window.neoPot.app.rendererReady()
   }, [])
 

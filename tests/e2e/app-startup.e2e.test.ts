@@ -191,6 +191,44 @@ test('built application starts and completes a translation through the isolated 
   }
 })
 
+test('auto-start launch marker briefly shows then hides the startup config window', async ({
+  browserName: _browserName,
+}) => {
+  const testRoot = await mkdtemp(path.join(os.tmpdir(), 'neopot-e2e-hidden-'))
+  const port = await reservePort()
+  const ollama = await startOllamaMock()
+  let electronApp: ElectronApplication | undefined
+
+  try {
+    await prepareConfig(testRoot, port, ollama.origin)
+    electronApp = await electron.launch({
+      executablePath: electronPath as unknown as string,
+      args: ['tests/e2e/electron-bootstrap.cjs', '--neopot-start-hidden'],
+      cwd: path.resolve('.'),
+      env: {
+        ...process.env,
+        NEOPOT_E2E_ROOT: testRoot,
+      },
+    })
+
+    await waitForWindow(electronApp, 'config')
+    await expect
+      .poll(() =>
+        electronApp?.evaluate(({ BrowserWindow }) => {
+          const configWindow = BrowserWindow.getAllWindows().find((window) =>
+            window.webContents.getURL().includes('window=config'),
+          )
+          return configWindow?.isVisible() ?? null
+        }),
+      )
+      .toBe(false)
+  } finally {
+    await electronApp?.close().catch(() => undefined)
+    await closeServer(ollama.server)
+    await rm(testRoot, { recursive: true, force: true })
+  }
+})
+
 async function waitForWindow(
   electronApp: ElectronApplication,
   expectedLabel: string,

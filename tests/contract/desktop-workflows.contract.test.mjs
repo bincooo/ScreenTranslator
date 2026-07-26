@@ -8,6 +8,7 @@ const hotkey = parseSource('src', 'main', 'modules', 'hotkey.ts')
 const tray = parseSource('src', 'main', 'modules', 'tray.ts')
 const ipc = parseSource('src', 'main', 'modules', 'ipc.ts')
 const screenshot = parseSource('src', 'main', 'modules', 'screenshot.ts')
+const mainIndex = read('src', 'main', 'index.ts')
 const screenshotWindow = read('src', 'renderer', 'windows', 'Screenshot', 'index.tsx')
 const rendererWindow = read('src', 'renderer', 'lib', 'electron', 'window.ts')
 const generalSettings = read(
@@ -63,5 +64,14 @@ test('screenshot flow keeps display scale metadata aligned across Main and rende
   assert.match(
     functionText(screenshot, 'cropCapture'),
     /Math\.round\(rect\.width \* lastScaleFactor\)/,
+  )
+})
+
+test('Windows auto-start launches carry the marker consumed by timed startup previews', () => {
+  assert.match(ipc.text, /args:\s*\[AUTO_START_HIDDEN_ARG\]/)
+  assert.match(mainIndex, /isAutoStartLaunch/)
+  assert.match(
+    mainIndex,
+    /autoHideAfterReadyMs:\s*startedFromAutoStart\s*\?\s*AUTO_START_PREVIEW_MS\s*:\s*undefined/,
   )
 })

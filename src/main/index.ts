@@ -2,6 +2,7 @@ import { app, BrowserWindow, Menu, protocol } from 'electron'
 import log from 'electron-log/main'
 import { APP_USER_MODEL_ID } from './modules/appIdentity'
 import { RENDERER_SCHEME } from './modules/rendererProtocol'
+import { AUTO_START_PREVIEW_MS, isAutoStartLaunch } from './modules/autoStart'
 import { isLogLevel, toLogTransportLevel, type AppLogLevel } from '../shared/logLevel'
 
 log.initialize()
@@ -46,6 +47,7 @@ if (!gotSingleInstanceLock) {
 }
 
 async function startApp(): Promise<void> {
+  const startedFromAutoStart = isAutoStartLaunch()
   const [clipboard, config, hotkey, ipc, proxy, server, tray, windowModule] = await Promise.all([
     import('./modules/clipboard'),
     import('./modules/config'),
@@ -68,6 +70,7 @@ async function startApp(): Promise<void> {
       if (window.isMinimized()) {
         window.restore()
       }
+      window.show()
       window.focus()
     }
   })
@@ -86,7 +89,15 @@ async function startApp(): Promise<void> {
       await config.setConfig('log_level', defaultLogLevel)
     }
 
-    const configWindowReady = windowModule.openWindow('config')
+    try {
+      ipc.migrateAutoStartLoginItem()
+    } catch (error) {
+      log.warn('Failed to migrate the auto-start login item.', error)
+    }
+
+    const configWindowReady = windowModule.openWindow('config', {
+      autoHideAfterReadyMs: startedFromAutoStart ? AUTO_START_PREVIEW_MS : undefined,
+    })
     const proxyReady = proxy.applyProxyToSession()
 
     tray.setupTray()

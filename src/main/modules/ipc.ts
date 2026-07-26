@@ -38,6 +38,7 @@ import {
   textTranslate,
 } from './workflow'
 import { APP_USER_MODEL_ID } from './appIdentity'
+import { AUTO_START_HIDDEN_ARG } from './autoStart'
 
 export interface NeoPotErrorPayload {
   code: 'IPC_UNKNOWN_CHANNEL' | 'IPC_INVALID_PAYLOAD' | 'IPC_HANDLER_FAILED'
@@ -82,6 +83,17 @@ export function getAutoStartLoginItemCompareOptions(): AutoStartLoginItemCompare
 
   return {
     path: process.execPath,
+    args: [AUTO_START_HIDDEN_ARG],
+  }
+}
+
+function getLegacyAutoStartLoginItemCompareOptions(): AutoStartLoginItemCompareOptions {
+  if (process.platform !== 'win32' || !app.isPackaged) {
+    return {}
+  }
+
+  return {
+    path: process.execPath,
     args: [],
   }
 }
@@ -95,6 +107,67 @@ function getAutoStartLoginItemSetOptions(): AutoStartLoginItemSetOptions {
     ...getAutoStartLoginItemCompareOptions(),
     name: APP_USER_MODEL_ID,
   }
+}
+
+function getLegacyAutoStartLoginItemSetOptions(): AutoStartLoginItemSetOptions {
+  return {
+    ...getLegacyAutoStartLoginItemCompareOptions(),
+    ...(process.platform === 'win32' && app.isPackaged ? { name: APP_USER_MODEL_ID } : {}),
+  }
+}
+
+export function migrateAutoStartLoginItem(): void {
+  if (process.platform !== 'win32' || !app.isPackaged) {
+    return
+  }
+
+  const current = app.getLoginItemSettings(getAutoStartLoginItemCompareOptions())
+  const legacy = app.getLoginItemSettings(getLegacyAutoStartLoginItemCompareOptions())
+  if (current.openAtLogin || !legacy.openAtLogin) {
+    return
+  }
+
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    ...getAutoStartLoginItemSetOptions(),
+  })
+}
+
+function setAutoStartEnabled(enabled: boolean): void {
+  if (process.platform !== 'win32' || !app.isPackaged) {
+    app.setLoginItemSettings({ openAtLogin: enabled })
+    return
+  }
+
+  if (!enabled) {
+    app.setLoginItemSettings({
+      openAtLogin: false,
+      ...getAutoStartLoginItemSetOptions(),
+    })
+    app.setLoginItemSettings({
+      openAtLogin: false,
+      ...getLegacyAutoStartLoginItemSetOptions(),
+    })
+    return
+  }
+
+  app.setLoginItemSettings({
+    openAtLogin: false,
+    ...getLegacyAutoStartLoginItemSetOptions(),
+  })
+  app.setLoginItemSettings({
+    openAtLogin: true,
+    ...getAutoStartLoginItemSetOptions(),
+  })
+}
+
+function isAutoStartEnabled(): boolean {
+  const current = app.getLoginItemSettings(getAutoStartLoginItemCompareOptions())
+  if (current.openAtLogin || process.platform !== 'win32' || !app.isPackaged) {
+    return current.openAtLogin
+  }
+
+  return app.getLoginItemSettings(getLegacyAutoStartLoginItemCompareOptions()).openAtLogin
 }
 
 const assertNoPayload = (payload: unknown) => {
@@ -590,14 +663,11 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false
     },
     'app:set-auto-start': (_event, payload) => {
-      app.setLoginItemSettings({
-        openAtLogin: assertBooleanPayload(payload, 'enabled'),
-        ...getAutoStartLoginItemSetOptions(),
-      })
+      setAutoStartEnabled(assertBooleanPayload(payload, 'enabled'))
     },
     'app:is-auto-start-enabled': (_event, payload) => {
       assertNoPayload(payload)
-      return app.getLoginItemSettings(getAutoStartLoginItemCompareOptions()).openAtLogin
+      return isAutoStartEnabled()
     },
     'app:minimize-current-window': (event, payload) => {
       assertNoPayload(payload)

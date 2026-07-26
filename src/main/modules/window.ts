@@ -27,6 +27,10 @@ import { getAppIconPath } from './appIdentity'
 export type WindowLabel = 'config' | 'translate' | 'recognize' | 'screenshot' | 'updater'
 type UpdaterPresentation = 'full' | 'notification'
 
+export interface OpenWindowOptions {
+  autoHideAfterReadyMs?: number
+}
+
 const windows = new Map<WindowLabel, BrowserWindow>()
 const windowLabelsByWebContentsId = new Map<number, WindowLabel>()
 const readyWindows = new Set<WindowLabel>()
@@ -365,7 +369,10 @@ function showWindowInForeground(window: BrowserWindow, label: WindowLabel): void
   }
 }
 
-function createBrowserWindow(label: WindowLabel): BrowserWindow {
+function createBrowserWindow(
+  label: WindowLabel,
+  openOptions: OpenWindowOptions = {},
+): BrowserWindow {
   logger.debug('Creating window.', {
     window: label,
   })
@@ -422,7 +429,14 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
       window.center()
     }
     showWindowInForeground(window, label)
-    logger.debug('Window ready to show.', {
+    if (openOptions.autoHideAfterReadyMs !== undefined) {
+      setTimeout(() => {
+        if (!window.isDestroyed()) {
+          window.hide()
+        }
+      }, openOptions.autoHideAfterReadyMs)
+    }
+    logger.debug('Window ready.', {
       window: label,
     })
   })
@@ -469,7 +483,10 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
   return window
 }
 
-export async function openWindow(label: WindowLabel): Promise<BrowserWindow> {
+export async function openWindow(
+  label: WindowLabel,
+  options: OpenWindowOptions = {},
+): Promise<BrowserWindow> {
   if (label === 'updater') {
     updaterPresentation = 'full'
   }
@@ -490,7 +507,7 @@ export async function openWindow(label: WindowLabel): Promise<BrowserWindow> {
   logger.debug('Opening new window.', {
     window: label,
   })
-  const window = createBrowserWindow(label)
+  const window = createBrowserWindow(label, options)
   await loadRenderer(window, label)
   return window
 }
