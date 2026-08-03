@@ -1,5 +1,5 @@
 import { getCurrentWindow } from '@/renderer/lib/electron/window'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import {
   lazy,

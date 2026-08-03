@@ -1,4 +1,4 @@
-import { useLocation, useRoutes } from 'react-router-dom'
+import { useLocation, useRoutes } from 'react-router'
 import { Suspense, useEffect } from 'react'
 import { Card, Divider } from '@heroui/react'
 import { useTranslation } from 'react-i18next'

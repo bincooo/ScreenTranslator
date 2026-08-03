@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router'
 
 const configPageLoaders = {
   '/general': () => import('../pages/General'),

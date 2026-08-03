@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router'
 import { BsInfoSquareFill } from 'react-icons/bs'
 import { PiTranslateFill } from 'react-icons/pi'
 import { AiFillAppstore } from 'react-icons/ai'
