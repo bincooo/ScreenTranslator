@@ -161,13 +161,7 @@ export default function App() {
     return (
       <>
         <RuntimeToaster />
-        <MemoryRouter
-          initialEntries={[getInitialConfigRoute()]}
-          future={{
-            v7_relativeSplatPath: true,
-            v7_startTransition: true,
-          }}
-        >
+        <MemoryRouter initialEntries={[getInitialConfigRoute()]}>
           <ErrorBoundary
             fallbackTitle={t('errors.window_render_failed', { window: t('windows.config') })}
           >
