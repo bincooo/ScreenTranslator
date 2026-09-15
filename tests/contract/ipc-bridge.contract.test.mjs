@@ -4,10 +4,12 @@ import test from 'node:test'
 import {
   assertSetEqual,
   collectAllSwitchCaseLabels,
+  collectHandlerFactoryObjectKeys,
   collectInterfaceMemberNames,
   collectNewSetStringLiterals,
   collectStringLiteralUnion,
   collectVariableObjectKeys,
+  handlerModuleSources,
   parseSource,
   read,
   variableText,
@@ -18,6 +20,7 @@ const preload = parseSource('src', 'preload', 'index.ts')
 const ipc = parseSource('src', 'main', 'modules', 'ipc.ts')
 const dts = parseSource('src', 'shared', 'types', 'electron-api.d.ts')
 const command = parseSource('src', 'renderer', 'lib', 'electron', 'command.ts')
+const commandHandlerModule = parseSource('src', 'main', 'modules', 'ipc', 'handlers', 'command.ts')
 
 const EXPECTED_API_NAMESPACES = [
   'app',
@@ -36,11 +39,18 @@ const EXPECTED_API_NAMESPACES = [
 
 const unionChannels = collectStringLiteralUnion(preload, 'IpcChannel')
 const allowlistedChannels = collectNewSetStringLiterals(preload, 'channels')
-const mainHandlerChannels = collectVariableObjectKeys(ipc, 'handlers')
+
+const mainHandlerChannels = handlerModuleSources().flatMap((source) =>
+  collectHandlerFactoryObjectKeys(source),
+)
+
 const apiNamespaces = collectVariableObjectKeys(preload, 'api')
 const typedNamespaces = collectInterfaceMemberNames(dts, 'NeoPotElectronApi')
 const declaredCommands = collectInterfaceMemberNames(command, 'ElectronCommandMap')
-const mainCommandCases = collectAllSwitchCaseLabels(ipc)
+const mainCommandCases = [
+  ...collectAllSwitchCaseLabels(ipc),
+  ...collectAllSwitchCaseLabels(commandHandlerModule),
+]
 
 function rendererIssuedCommands() {
   const commands = new Set()

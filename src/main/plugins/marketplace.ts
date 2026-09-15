@@ -68,24 +68,15 @@ async function readRemoteMarketplace(candidates: string[]): Promise<PluginMarket
 }
 
 async function fetchMarketplace(source: string): Promise<PluginMarketplaceEntry[]> {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => {
-    controller.abort()
-  }, MARKETPLACE_FETCH_TIMEOUT_MS)
-
-  try {
-    const response = await fetch(source, {
-      cache: 'no-cache',
-      signal: controller.signal,
-    })
-    if (!response.ok) {
-      throw new Error(`Marketplace index request failed with HTTP ${response.status}.`)
-    }
-
-    return parseMarketplaceEntries(await response.text())
-  } finally {
-    clearTimeout(timeout)
+  const response = await fetch(source, {
+    cache: 'no-cache',
+    signal: AbortSignal.timeout(MARKETPLACE_FETCH_TIMEOUT_MS),
+  })
+  if (!response.ok) {
+    throw new Error(`Marketplace index request failed with HTTP ${response.status}.`)
   }
+
+  return parseMarketplaceEntries(await response.text())
 }
 
 function normalizeGithubRepoName(repo: string): string {

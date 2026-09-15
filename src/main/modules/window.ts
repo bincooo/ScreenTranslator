@@ -58,6 +58,7 @@ const windowDefinitions: Record<WindowLabel, WindowDefinition> = {
     height: 600,
     minWidth: 800,
     minHeight: 400,
+    transparent: true,
     resizable: true,
   },
   translate: {
@@ -86,6 +87,7 @@ const windowDefinitions: Record<WindowLabel, WindowDefinition> = {
     height: 520,
     minWidth: 640,
     minHeight: 440,
+    transparent: true,
     resizable: true,
   },
 }
@@ -96,6 +98,7 @@ const updaterNotificationDefinition: WindowDefinition = {
   minWidth: 360,
   minHeight: 220,
   skipTaskbar: true,
+  transparent: true,
   resizable: false,
 }
 

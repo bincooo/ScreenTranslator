@@ -101,6 +101,38 @@ export function collectVariableObjectKeys(source, variableName) {
   return initializer.properties.map(propertyName).sort()
 }
 
+export function collectHandlerFactoryObjectKeys(source) {
+  const factories = []
+  visit(source.ast, (node) => {
+    if (ts.isFunctionDeclaration(node) && !!node.name && /Handlers$/.test(node.name.text)) {
+      factories.push(node)
+    }
+  })
+  assert.ok(factories.length > 0, `Missing *Handlers factory in ${source.filePath}`)
+  return factories
+    .flatMap((factory) => {
+      const record = findNode(factory, (node) => ts.isObjectLiteralExpression(node))
+      assert.ok(record, `Missing handler record in ${source.filePath}`)
+      return record.properties.map(propertyName)
+    })
+    .sort()
+}
+
+export function handlerModuleSources() {
+  return fileNames('src', 'main', 'modules', 'ipc', 'handlers')
+    .filter((name) => name.endsWith('.ts'))
+    .map((name) => parseSource('src', 'main', 'modules', 'ipc', 'handlers', name))
+}
+
+export function ipcBundleText() {
+  return [
+    read('src', 'main', 'modules', 'ipc.ts'),
+    ...fileNames('src', 'main', 'modules', 'ipc', 'handlers').map((name) =>
+      read('src', 'main', 'modules', 'ipc', 'handlers', name),
+    ),
+  ].join('\n')
+}
+
 export function collectVariableStringArray(source, variableName) {
   const initializer = findVariableInitializer(source, variableName)
   assert.ok(

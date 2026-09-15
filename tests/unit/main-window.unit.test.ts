@@ -331,6 +331,7 @@ describe('Main window lifecycle behavior', () => {
     const windows = await loadWindowModule()
     await windows.openWindow('config')
     const window = lastWindow()
+    expect(window.options.transparent).toBe(true)
     const firstClose = { preventDefault: vi.fn() }
 
     window.trigger('close', firstClose)
@@ -351,6 +352,7 @@ describe('Main window lifecycle behavior', () => {
     expect(notification).toBe(window)
     expect(window.url).toContain('presentation=notification')
     expect(window.options.skipTaskbar).toBe(true)
+    expect(window.options.transparent).toBe(true)
 
     windows.markWindowReady('updater')
     const full = await windows.openWindow('updater')

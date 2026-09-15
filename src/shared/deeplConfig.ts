@@ -1,4 +1,4 @@
-export const DEEPL_SERVICE_TYPES = ['free', 'api', 'deeplx'] as const
+const DEEPL_SERVICE_TYPES = ['free', 'api', 'deeplx'] as const
 
 export type DeepLServiceType = (typeof DEEPL_SERVICE_TYPES)[number]
 

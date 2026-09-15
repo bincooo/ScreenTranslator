@@ -26,3 +26,19 @@ test-results
 
 # Spec document
 spec/
+
+# CodeGraph index (local, regenerable)
+.codegraph/
+
+# >>> Comet managed project state >>>
+!/.comet/
+/.comet/*
+!/.comet/config.yaml
+# <<< Comet managed project state <<<
+
+
+# Claude Code local project config
+.claude/
+# Openspec / superpowers workflow artifacts (local)
+docs/openspec/
+docs/superpowers/

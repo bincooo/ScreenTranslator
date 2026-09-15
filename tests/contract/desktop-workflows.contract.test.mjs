@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { functionText, parseSource, read } from '../shared/source.mjs'
+import { functionText, ipcBundleText, parseSource, read } from '../shared/source.mjs'
 
 const server = parseSource('src', 'main', 'modules', 'localServer.ts')
 const hotkey = parseSource('src', 'main', 'modules', 'hotkey.ts')
 const tray = parseSource('src', 'main', 'modules', 'tray.ts')
-const ipc = parseSource('src', 'main', 'modules', 'ipc.ts')
+const ipcBundle = ipcBundleText()
+const ipcAutoStart = parseSource('src', 'main', 'modules', 'ipc', 'autoStart.ts')
 const screenshot = parseSource('src', 'main', 'modules', 'screenshot.ts')
-const mainIndex = read('src', 'main', 'index.ts')
+const mainIndex = parseSource('src', 'main', 'index.ts')
 const screenshotWindow = read('src', 'renderer', 'windows', 'Screenshot', 'index.tsx')
 const rendererWindow = read('src', 'renderer', 'lib', 'electron', 'window.ts')
 const generalSettings = read(
@@ -31,7 +32,7 @@ test('core workflows are reachable from hotkey, local server, renderer IPC, and 
     for (const [label, source] of [
       ['hotkey', hotkey.text],
       ['server', server.text],
-      ['ipc', ipc.text],
+      ['ipc', ipcBundle],
     ]) {
       assert.match(
         source,
@@ -53,7 +54,7 @@ test('core workflows are reachable from hotkey, local server, renderer IPC, and 
 })
 
 test('screenshot flow keeps display scale metadata aligned across Main and renderer', () => {
-  assert.match(ipc.text, /'app:get-current-display'/)
+  assert.match(ipcBundle, /'app:get-current-display'/)
   assert.match(rendererWindow, /window\.neoPot\.app\.getCurrentDisplay/)
   assert.match(screenshotWindow, /const monitor = await appWindow\.getDisplay\(\)/)
   assert.match(
@@ -68,10 +69,10 @@ test('screenshot flow keeps display scale metadata aligned across Main and rende
 })
 
 test('Windows auto-start launches carry the marker consumed by timed startup previews', () => {
-  assert.match(ipc.text, /args:\s*\[AUTO_START_HIDDEN_ARG\]/)
-  assert.match(mainIndex, /isAutoStartLaunch/)
+  assert.match(ipcAutoStart.text, /args:\s*\[AUTO_START_HIDDEN_ARG\]/)
+  assert.match(mainIndex.text, /isAutoStartLaunch/)
   assert.match(
-    mainIndex,
+    mainIndex.text,
     /autoHideAfterReadyMs:\s*startedFromAutoStart\s*\?\s*AUTO_START_PREVIEW_MS\s*:\s*undefined/,
   )
 })

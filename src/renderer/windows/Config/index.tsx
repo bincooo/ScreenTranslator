@@ -27,10 +27,10 @@ export default function Config() {
   }, [])
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
+    <div className="flex overflow-hidden w-[calc(100vw-2px)]">
       <Card
         shadow="none"
-        className={`h-screen w-57.5 shrink-0 rounded-none bg-content1 ${LINUX_LEFT_WINDOW_FRAME_CLASS} border-r-1 border-default-100 select-none cursor-default`}
+        className={`w-57.5 shrink-0 rounded-none bg-content1 ${LINUX_LEFT_WINDOW_FRAME_CLASS} border-default-100 select-none cursor-default`}
       >
         <div className={`${WINDOW_TOPBAR_HEIGHT_CLASS} p-1.25`}>
           <DragRegion className="h-full w-full" />
@@ -48,7 +48,7 @@ export default function Config() {
         <SideBar />
       </Card>
       <div
-        className={`flex h-screen min-w-0 flex-1 flex-col bg-background ${LINUX_RIGHT_WINDOW_FRAME_CLASS} select-none cursor-default`}
+        className={`flex min-w-0 flex-1 flex-col bg-background ${LINUX_RIGHT_WINDOW_FRAME_CLASS} select-none cursor-default`}
       >
         <DragRegion className="fixed top-1.25 left-58.75 right-1.25 h-7.5" />
         <div className={`${WINDOW_TOPBAR_HEIGHT_CLASS} flex justify-between`}>

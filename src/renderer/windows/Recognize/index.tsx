@@ -104,7 +104,7 @@ export default function Recognize() {
   const isRecognizeConfigReady = serviceInstanceList !== null
 
   return (
-    <div className={`flex h-screen flex-col bg-background ${LINUX_WINDOW_FRAME_CLASS}`}>
+    <div className={`flex flex-col bg-background ${LINUX_WINDOW_FRAME_CLASS}`}>
       <TopDragRegion />
       <div
         className={`${WINDOW_TOPBAR_HEIGHT_CLASS} flex ${

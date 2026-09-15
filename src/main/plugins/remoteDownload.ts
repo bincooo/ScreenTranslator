@@ -2,7 +2,7 @@ import { open, rm } from 'node:fs/promises'
 
 import { PluginInstallError } from './pluginInstallerCore'
 
-export const REMOTE_PLUGIN_FETCH_TIMEOUT_MS = 30_000
+const REMOTE_PLUGIN_FETCH_TIMEOUT_MS = 30_000
 export const REMOTE_PLUGIN_MAX_COMPRESSED_BYTES = 128 * 1024 * 1024
 export const REMOTE_PLUGIN_MAX_MANIFEST_BYTES = 1024 * 1024
 
@@ -69,15 +69,10 @@ export async function fetchRemotePluginResource<T>(
     fetchImpl = fetch,
   }: RemotePluginFetchOptions,
 ): Promise<T> {
-  const controller = new AbortController()
-  let timedOut = false
-  const timeout = setTimeout(() => {
-    timedOut = true
-    controller.abort()
-  }, timeoutMs)
+  const signal = AbortSignal.timeout(timeoutMs)
 
   try {
-    const response = await fetchImpl(source, { signal: controller.signal })
+    const response = await fetchImpl(source, { signal })
     if (!response.ok) {
       throw new PluginInstallError(
         'PLUGIN_INVALID_PACKAGE',
@@ -89,6 +84,12 @@ export async function fetchRemotePluginResource<T>(
     if (error instanceof PluginInstallError) {
       throw error
     }
+    const timedOut =
+      signal.aborted &&
+      ((typeof signal.reason === 'object' &&
+        signal.reason !== null &&
+        (signal.reason as { name?: string }).name === 'TimeoutError') ||
+        (error instanceof Error && error.name === 'TimeoutError'))
     if (timedOut) {
       throw new PluginInstallError(
         'PLUGIN_INVALID_PACKAGE',
@@ -99,8 +100,6 @@ export async function fetchRemotePluginResource<T>(
       'PLUGIN_INVALID_PACKAGE',
       `${operation} failed: ${error instanceof Error ? error.message : String(error)}`,
     )
-  } finally {
-    clearTimeout(timeout)
   }
 }
 

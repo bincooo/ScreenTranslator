@@ -18,6 +18,7 @@ import { invoke_plugin } from '@/renderer/lib/plugin/invoke_plugin'
 import type { ServiceInstanceConfigMap } from '@/renderer/lib/service/serviceConfig'
 import * as builtinServices from '@/renderer/providers/recognize'
 import type { RecognizeProvider } from '@/renderer/providers/recognize'
+import { toErrorMessage } from '@/renderer/providers/shared'
 import { useConfig } from '../../../hooks'
 import { base64Atom } from '../ImageArea'
 import { pluginListAtom } from '..'
@@ -52,10 +53,6 @@ function normalizeRecognizedText(value: unknown, deleteNewline: boolean) {
     text = text.replace(/-\s+/g, '').replace(/\s+/g, ' ')
   }
   return text
-}
-
-function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.toString() : String(error)
 }
 
 export default function TextArea(props: TextAreaProps) {

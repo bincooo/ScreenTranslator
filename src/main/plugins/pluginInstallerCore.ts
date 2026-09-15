@@ -39,7 +39,7 @@ export interface PluginArchiveLimits {
   maxTotalUncompressedBytes: number
 }
 
-export const DEFAULT_PLUGIN_ARCHIVE_LIMITS: PluginArchiveLimits = {
+const DEFAULT_PLUGIN_ARCHIVE_LIMITS: PluginArchiveLimits = {
   maxEntries: 4096,
   maxEntryUncompressedBytes: 256 * 1024 * 1024,
   maxTotalUncompressedBytes: 512 * 1024 * 1024,
@@ -61,7 +61,7 @@ export function isValidPluginIdentityPart(value: string): boolean {
   return PLUGIN_ID_PATTERN.test(value)
 }
 
-export function assertValidPluginIdentity(type: string, name: string) {
+function assertValidPluginIdentity(type: string, name: string) {
   if (!isValidPluginIdentityPart(type) || !isValidPluginIdentityPart(name)) {
     throw new PluginInstallError(
       'PLUGIN_INVALID_PACKAGE',

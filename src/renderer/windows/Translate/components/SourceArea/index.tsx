@@ -31,6 +31,7 @@ import { invoke_plugin } from '@/renderer/lib/plugin/invoke_plugin'
 import { invokeCommand } from '@/renderer/lib/electron/command'
 import * as recognizeServices from '@/renderer/providers/recognize'
 import type { RecognizeProvider } from '@/renderer/providers/recognize'
+import { toErrorMessage } from '@/renderer/providers/shared'
 import detect from '@/renderer/lib/language/lang_detect'
 import { reportRuntimeError } from '@/renderer/lib/runtimeError'
 import type { EnabledServicePluginList } from '@/renderer/windows/Config/pages/Plugin/installedPlugins'
@@ -39,6 +40,8 @@ import {
   type SelectionCaptureFailureReason,
   type SelectionCaptureResult,
 } from '@/shared/translateWorkflow'
+import { toResultText, transformVarName } from './utils'
+
 const appWindow = getCurrentWindow()
 
 export const sourceTextAtom = atom('')
@@ -46,6 +49,7 @@ export const detectLanguageAtom = atom('')
 export const manualTranslateFlagAtom = atom('')
 
 const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model']
+
 interface SourceAreaProps {
   pluginList: EnabledServicePluginList
   serviceInstanceConfigMap: ServiceInstanceConfigMap
@@ -65,93 +69,6 @@ const selectionCaptureFailureKeys: Record<SelectionCaptureFailureReason, string>
 }
 
 const recognizeServiceMap: Record<string, RecognizeProvider> = recognizeServices
-function toResultText(value: unknown): string {
-  return typeof value === 'string' ? value : String(value ?? '')
-}
-
-function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.toString() : String(error)
-}
-
-function transformVarName(str: string) {
-  let str2 = str
-
-  // snake_case to SNAKE_CASE
-  if (/_[a-z]/.test(str2)) {
-    str2 = str2
-      .split('_')
-      .map((it: string) => it.toLocaleUpperCase())
-      .join('_')
-  }
-  if (str2 !== str) {
-    return str2
-  }
-
-  // SNAKE_CASE to kebab-case
-  if (/^[A-Z]+(_[A-Z]+)*$/.test(str2)) {
-    str2 = str2
-      .split('_')
-      .map((it: string) => it.toLocaleLowerCase())
-      .join('-')
-  }
-  if (str2 !== str) {
-    return str2
-  }
-
-  // kebab-case to dot.notation
-  if (/-/.test(str2)) {
-    str2 = str2
-      .split('-')
-      .map((it: string) => it.toLocaleLowerCase())
-      .join('.')
-  }
-  if (str2 !== str) {
-    return str2
-  }
-
-  // dot.notation to space separated
-  if (/\.[a-z]/.test(str2)) {
-    str2 = str2.replaceAll(/(\.)([a-z])/g, (_: string, _2: string, it: string) => ' ' + it)
-  }
-  if (str2 !== str) {
-    return str2
-  }
-
-  // space separated to Title Case
-  if (/\s[a-z]/.test(str2)) {
-    str2 = str2.replaceAll(/\s([a-z])/g, (_: string, it: string) => ' ' + it.toLocaleUpperCase())
-    str2 = str2.substring(0, 1).toLocaleUpperCase() + str2.substring(1)
-  }
-  if (str2 !== str) {
-    return str2
-  }
-
-  // Title Case to CamelCase
-  if (/\s[A-Z]/.test(str2)) {
-    str2 = str2.replaceAll(/\s([A-Z])/g, (_: string, it: string) => it)
-    str2 = str2.substring(0, 1).toLocaleLowerCase() + str2.substring(1)
-  }
-  if (str2 !== str) {
-    return str2
-  }
-
-  // CamelCase to PascalCase
-  if (/^[a-z]+[A-Z]+/.test(str2)) {
-    str2 = str2.substring(0, 1).toLocaleUpperCase() + str2.substring(1)
-  }
-  if (str2 !== str) {
-    return str2
-  }
-
-  // PascalCase to snake_case
-  if (/[^\s][A-Z]/.test(str2)) {
-    str2 = str2.replaceAll(/[A-Z]/g, (it: string, offset: number) => {
-      return (offset == 0 ? '' : '_') + it.toLocaleLowerCase()
-    })
-  }
-
-  return str2
-}
 
 export default function SourceArea(props: SourceAreaProps) {
   const { pluginList, serviceInstanceConfigMap } = props
@@ -393,12 +310,6 @@ export default function SourceArea(props: SourceAreaProps) {
     }
   }
 
-  const handleNewTextRef = useRef(handleNewText)
-
-  useEffect(() => {
-    handleNewTextRef.current = handleNewText
-  }, [handleNewText])
-
   const handleSpeak = async () => {
     if (!ttsServiceInstanceKey) {
       throw new Error(t('translate.tts_not_configured'))
@@ -411,6 +322,12 @@ export default function SourceArea(props: SourceAreaProps) {
     await speakText(sourceText, detected)
   }
 
+  const handleNewTextRef = useRef(handleNewText)
+
+  useEffect(() => {
+    handleNewTextRef.current = handleNewText
+  }, [handleNewText])
+
   useEffect(() => {
     const removeListener = onAppEvent('new_text', (payload) => {
       appWindow.setFocus()
@@ -419,10 +336,27 @@ export default function SourceArea(props: SourceAreaProps) {
         reportSourceAreaError(error, 'translate.new_text')
       })
     })
-    void window.neoPot.app.rendererReady()
-
     return removeListener
   }, [reportSourceAreaError])
+
+  // Signal readiness only after the workflow config values resolve. Until then,
+  // `handleNewText` reads `recognizeServiceList`/`recognizeLanguage` as null and
+  // rejects image workflows with "recognize service not configured". The main
+  // process keeps `new_text` events in its pending window-event queue until
+  // `rendererReady()` flushes them, so deferring the signal lets the listener
+  // observe the resolved config when the queued image event is delivered.
+  useEffect(() => {
+    if (
+      deleteNewline === null ||
+      incrementalTranslate === null ||
+      recognizeLanguage === null ||
+      recognizeServiceList === null ||
+      hideWindow === null
+    ) {
+      return
+    }
+    void window.neoPot.app.rendererReady()
+  }, [deleteNewline, incrementalTranslate, recognizeLanguage, recognizeServiceList, hideWindow])
 
   useEffect(() => {
     return () => {

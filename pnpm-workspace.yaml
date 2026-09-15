@@ -1,0 +1,7 @@
+allowBuilds:
+  '@heroui/shared-utils': true
+  '@swc/core': true
+  electron: true
+  electron-winstaller: true
+  esbuild: true
+  protobufjs: true

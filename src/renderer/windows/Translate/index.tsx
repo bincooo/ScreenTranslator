@@ -190,7 +190,7 @@ export default function Translate() {
 
   return (
     <div
-      className={`relative flex h-screen w-screen flex-col bg-background ${LINUX_WINDOW_FRAME_CLASS}`}
+      className={`relative flex flex-col bg-background ${LINUX_WINDOW_FRAME_CLASS}`}
     >
       <div className={`${WINDOW_TOPBAR_HEIGHT_CLASS} shrink-0`} aria-hidden="true" />
       <div className="min-h-0 flex-1 px-2">

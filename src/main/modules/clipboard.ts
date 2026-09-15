@@ -23,7 +23,7 @@ function syncSelectionClipboardBaseline(): boolean {
   return true
 }
 
-export function startClipboardMonitor(): void {
+function startClipboardMonitor(): void {
   if (timer) {
     return
   }

@@ -7,12 +7,12 @@ export const WINDOW_CONTROL_ICON_CLASS = 'text-[16px]'
 export const PIN_ICON_CLASS = 'text-[20px]'
 
 export const LINUX_WINDOW_FRAME_CLASS =
-  osType === 'Linux' ? 'rounded-[10px] border-1 border-default-100' : ''
+  osType === 'Linux' ? 'rounded-[10px] border-1 border-default-100 h-[calc(100vh-2px)] w-[calc(100vw-2px)]' : ''
 
-export const LINUX_LEFT_WINDOW_FRAME_CLASS = osType === 'Linux' ? 'rounded-l-[10px] border-1' : ''
+export const LINUX_LEFT_WINDOW_FRAME_CLASS = osType === 'Linux' ? 'rounded-l-[10px] border-1 h-[calc(100vh-2px)]' : ''
 
 export const LINUX_RIGHT_WINDOW_FRAME_CLASS =
-  osType === 'Linux' ? 'rounded-r-[10px] border-1 border-l-0 border-default-100' : ''
+  osType === 'Linux' ? 'rounded-r-[10px] border-1 border-l-0 border-default-100 h-[calc(100vh-2px)]' : ''
 
 export const LINUX_CLOSE_WINDOW_CORNER_CLASS = osType === 'Linux' ? 'rounded-tr-[10px]' : ''
 

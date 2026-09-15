@@ -36,7 +36,7 @@ function legacyBasePath(): string {
   return path.join(app.getPath('appData'), 'com.pot-app.desktop')
 }
 
-export async function detectLegacyData(): Promise<LegacyDataDetection> {
+async function detectLegacyData(): Promise<LegacyDataDetection> {
   const legacyBase = legacyBasePath()
   const configPath = path.join(legacyBase, 'config.json')
   const historyPath = path.join(legacyBase, 'history.db')

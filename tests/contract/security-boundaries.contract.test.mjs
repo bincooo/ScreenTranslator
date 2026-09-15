@@ -4,6 +4,7 @@ import test from 'node:test'
 import {
   collectImports,
   functionText,
+  ipcBundleText,
   parseSource,
   read,
   variableText,
@@ -13,7 +14,7 @@ import {
 const mainIndex = parseSource('src', 'main', 'index.ts')
 const windowSource = parseSource('src', 'main', 'modules', 'window.ts')
 const preload = parseSource('src', 'preload', 'index.ts')
-const ipc = parseSource('src', 'main', 'modules', 'ipc.ts')
+const ipcPaths = parseSource('src', 'main', 'modules', 'ipc', 'paths.ts')
 const http = parseSource('src', 'main', 'modules', 'http.ts')
 const networkSafety = parseSource('src', 'main', 'modules', 'networkSafety.ts')
 const externalUrlSafety = parseSource('src', 'main', 'modules', 'externalUrlSafety.ts')
@@ -83,23 +84,23 @@ test('packaged renderer scheme is privileged and registered before app readiness
 })
 
 test('filesystem IPC resolves only allowed bases and limits delete operations to AppCache', () => {
-  assert.match(ipc.text, /type SupportedBaseDirectory = 'AppConfig' \| 'AppCache' \| 'AppLog'/)
-  assert.match(functionText(ipc, 'assertPathInside'), /path\.resolve\(parent\)/)
+  assert.match(ipcPaths.text, /type SupportedBaseDirectory = 'AppConfig' \| 'AppCache' \| 'AppLog'/)
+  assert.match(functionText(ipcPaths, 'assertPathInside'), /path\.resolve\(parent\)/)
   assert.match(
-    functionText(ipc, 'resolveFilePath'),
+    functionText(ipcPaths, 'resolveFilePath'),
     /Relative filesystem paths require a supported baseDir/,
   )
   assert.match(
-    functionText(ipc, 'resolveFilePath'),
+    functionText(ipcPaths, 'resolveFilePath'),
     /Absolute filesystem paths are limited to NeoPot app data paths/,
   )
-  assert.match(functionText(ipc, 'resolveRemovableFilePath'), /baseDir !== 'AppCache'/)
+  assert.match(functionText(ipcPaths, 'resolveRemovableFilePath'), /baseDir !== 'AppCache'/)
   assert.match(
-    functionText(ipc, 'resolveRemovableFilePath'),
+    functionText(ipcPaths, 'resolveRemovableFilePath'),
     /Renderer delete operations are limited to AppCache/,
   )
   assert.doesNotMatch(
-    functionText(ipc, 'resolveFilePath'),
+    functionText(ipcPaths, 'resolveFilePath'),
     /path\.join\(basePath, filePath\) : filePath/,
   )
 })
@@ -114,7 +115,7 @@ test('external shell opening and updater release pages go through explicit allow
   assert.match(functionText(updater, 'openReleasePage'), /safeOpenExternal\(target/)
   assert.match(functionText(updater, 'openReleasePage'), /allowedHosts: \['github\.com'\]/)
   assert.match(functionText(updater, 'openReleasePage'), /allowSubdomains: false/)
-  assert.match(ipc.text, /safeOpenExternal\(assertUrlPayload\(args\)\)/)
+  assert.match(ipcBundleText(), /safeOpenExternal\(assertUrlPayload\(args\)\)/)
 })
 
 test('renderer HTTP bridge blocks local-network abuse and disables redirects', () => {

@@ -16,12 +16,17 @@ if (process.platform === 'win32') {
 }
 
 if (!app.isPackaged) {
+  // GPU is disabled in dev to support headless/CI environments without a
+  // display server. The Chromium sandbox is intentionally NOT disabled:
+  // `--no-sandbox` makes the renderer fall under the host kernel's seccomp
+  // policy, which returns ESRCH for openat() on /dev/shm on some Linux
+  // kernels and crashes the renderer with
+  // `platform_shared_memory_region_posix.cc:219 FATAL`.
   app.disableHardwareAcceleration()
   app.commandLine.appendSwitch('disable-gpu')
   app.commandLine.appendSwitch('disable-gpu-compositing')
   app.commandLine.appendSwitch('disable-gpu-sandbox')
   app.commandLine.appendSwitch('in-process-gpu')
-  app.commandLine.appendSwitch('no-sandbox')
 }
 
 // Register the renderer scheme before the app is ready so packaged windows

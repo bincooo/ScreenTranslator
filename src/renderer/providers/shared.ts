@@ -20,6 +20,10 @@ export function errorMessage(error: unknown): string {
   return 'Unknown request error.'
 }
 
+export function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.toString() : String(error)
+}
+
 export function responseMessage(
   data: unknown,
   options: { directError?: 'any' | 'non-object' } = {},
